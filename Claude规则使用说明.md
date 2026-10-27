@@ -53,23 +53,75 @@ proxy-groups:
 
 不支持 `include-all` 的内核，请使用 `proxies` 显式列出配置中已存在的节点或策略组。
 
-## 可选：进程规则与 QUIC 拦截
+## 可选：桌面客户端与 CLI 进程规则
 
-纯域名规则集无法表达进程条件和拒绝动作。若要保留原脚本的额外行为，
-在 Mihomo 主配置的 `rules` 中按下面顺序合并，放在通用规则和 MATCH 之前：
+纯域名规则集无法表达进程条件。以下规则需要合并到 Mihomo 主配置的 `rules` 中，
+放在通用规则和 MATCH 之前；末尾的 Claude 是目标策略组名称，需与已有策略组一致。
+如已有同名规则，请合并去重，不要重复创建 rules 配置项。
 
 ```yaml
 rules:
-  # 可选：全局拒绝 UDP 443，会影响所有站点的 QUIC 流量。
-  - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
-  # 原脚本的 Windows Claude CLI 规则，含更新后带后缀的进程。
+  # macOS：Claude 桌面客户端主进程及辅助进程。
+  - 'PROCESS-NAME-REGEX,^Claude( Helper.*)?$,Claude'
+  # macOS：原生安装的 Claude Code CLI，通常为小写 claude。
+  - PROCESS-NAME,claude,Claude
+  # Windows：Claude Code CLI，保留原脚本对更新后后缀名称的匹配。
   - 'PROCESS-NAME-REGEX,^claude\.exe,Claude'
+  # 域名规则作为补充，确保放在通用规则和 MATCH 之前。
   - RULE-SET,claude,Claude
 ```
 
-进程正则是 Mihomo 扩展；进程规则需要客户端能识别进程信息。
-域名列表本身可用于各平台；进程示例仅匹配 Windows 的 claude.exe 系列名称。
-QUIC 拦截是否有效还取决于该 UDP 流量是否经过客户端，不保证解决 Cloudflare 验证问题。
+### macOS 桌面客户端
+
+`^Claude( Helper.*)?$` 匹配大写 Claude 主进程，以及 Claude Helper、
+Claude Helper (Renderer) 等辅助进程。网络请求可能由辅助进程发起，因此一并匹配。
+该表达式不会匹配小写的 CLI 进程 claude。
+
+以上名称是常见进程名称，具体以客户端连接面板显示的进程名为准。
+桌面客户端启动的独立子程序不一定采用这些名称，需要按实际连接确认。
+
+### macOS Claude Code CLI
+
+原生安装版通常使用小写进程名 claude，采用 PROCESS-NAME 精确匹配即可。
+旧版 npm 安装可能被识别为 node；不要直接添加 PROCESS-NAME,node,Claude，
+否则其他 Node.js 程序也会进入 Claude 策略组。此时优先使用域名规则，
+或根据连接面板中实际可见的进程路径另行配置精确匹配。
+
+### Windows CLI 与平台范围
+
+Windows 示例匹配以 claude.exe 开头的进程，包括原脚本提到的
+claude.exe.old.<时间戳> 等带后缀名称。该规则是 CLI 示例，
+不代表覆盖 Windows 桌面客户端全部辅助进程。
+
+按运行平台选用所需规则；域名列表本身可跨平台使用。
+
+### 为什么正则规则外面有单引号
+
+示例中的单引号是 YAML 字符串定界符，解析配置后会去掉，不属于正则表达式。
+单引号字符串会保留反斜杠原样，例如 `claude\.exe` 中的 `\.` 用于匹配字面量句点。
+保持示例中的单反斜杠写法，不要套用 JavaScript 字符串的双反斜杠写法。
+
+### 生效条件与影响
+
+PROCESS-NAME-REGEX 是 Mihomo 扩展，并非所有旧版 Clash 内核都支持。
+进程规则需要客户端能够识别连接所属进程，通常配合 TUN 模式使用；
+最终以连接面板中的进程信息和命中规则为准，TUN 模式本身不保证识别成功。
+这些规则匹配进程的网络连接，会将命中的其他外部服务请求也交给 Claude 策略组；
+仅配置域名规则时则按目标域名分流。
+
+## 可选：QUIC 拦截
+
+若需要保留原脚本的额外行为，可以把下面规则放到上述进程规则和域名规则之前：
+
+```yaml
+rules:
+  # 全局拒绝 UDP 443，会影响所有站点的 QUIC 流量，按需启用。
+  - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
+```
+
+这条规则拒绝经过客户端的 UDP 443 连接，不会自动将流量改为代理。
+支持回退的浏览器通常会改用 TCP；后续连接仍按其他分流规则处理。
+QUIC 拦截是否有效取决于该 UDP 流量是否经过客户端，不保证解决 Cloudflare 验证问题。
 
 ## 格式参考
 
