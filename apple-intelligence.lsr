@@ -1,0 +1,38 @@
+# Siri 与听写
+DOMAIN-SUFFIX,guzzoni.apple.com
+DOMAIN-SUFFIX,smoot.apple.com
+DOMAIN-SUFFIX,siri.apple.com
+DOMAIN-SUFFIX,api-siri-prod.apple.com
+DOMAIN-SUFFIX,seed-siri-apple-com.v.aaplimg.com
+DOMAIN-SUFFIX,nlp.apple.com
+DOMAIN-SUFFIX,prod.dss.apple.com
+DOMAIN-KEYWORD,siri
+
+# Private Cloud Compute (PCC) 与 OHTTP Relay（含 ChatGPT 扩展转发）
+DOMAIN-SUFFIX,apple-relay.apple.com
+DOMAIN-SUFFIX,apple-native-relay.apple.com
+DOMAIN-SUFFIX,apple-relay.cloudflare.com
+DOMAIN-SUFFIX,apple-carry-relay.cloudflare.com
+DOMAIN-SUFFIX,apple-relay.fastly-edge.com
+DOMAIN-SUFFIX,apple-relay.akamaized.net
+DOMAIN-SUFFIX,cp4.cloudflare.com
+
+# Private Relay 与 OHTTP 网关鉴权/CNAME
+DOMAIN-SUFFIX,mask.icloud.com
+DOMAIN-SUFFIX,mask-h2.icloud.com
+DOMAIN-SUFFIX,mask-api.icloud.com
+DOMAIN-SUFFIX,mask-boot.icloud.com
+DOMAIN-SUFFIX,mask-canary.icloud.com
+DOMAIN-SUFFIX,mask.apple-dns.net
+DOMAIN-SUFFIX,mask-t.apple-dns.net
+DOMAIN-SUFFIX,mask-api.fe.apple-dns.net
+DOMAIN-SUFFIX,mask-api.fe2.apple-dns.net
+
+# CloudKit 网关与连通性探测
+DOMAIN-SUFFIX,gateway.icloud.com
+DOMAIN-SUFFIX,probe.icloud.com
+DOMAIN-SUFFIX,api.apple-cloudkit.com
+
+# 地区检测（若苹果地图定位漂移，可单独注释 wps.apple.com 规则）
+DOMAIN,gspe1-ssl.ls.apple.com
+DOMAIN-SUFFIX,wps.apple.com
